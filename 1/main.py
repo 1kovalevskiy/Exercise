@@ -67,9 +67,9 @@ def link_from_raw_page(raw_page, base_url=None):
     return link_arr
 
 
-def runner(query: str,
-           limit: int = typer.Option(1000, '-l', help="maximum count of links to display"),
-           recursion: int = typer.Option(1, '-r', help="level of recursion")):
+def runner(query: str = typer.Argument(None, help="Your query"),
+           limit: int = typer.Option(1000, '--limit', '-l', help="maximum count of links to display"),
+           recursion: int = typer.Option(1, '--recursion', '-r', help="level of recursion")):
 
     max_result = limit
     with typer.progressbar(length=max_result, label="Parsing") as progress:
