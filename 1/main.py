@@ -4,6 +4,10 @@ import requests
 from googleapiclient.discovery import build
 import urllib.parse
 import pprint
+import typer
+import click
+
+app = typer.Typer()
 
 APIKEY = "AIzaSyAHn26JDpcxohkElf0vwrWJF20mByHk0M0"
 APIKEY2 = "AIzaSyC0i5bRb8yoUAQl4iOo_WwWhovdQpJXEMU"
@@ -63,40 +67,35 @@ def link_from_raw_page(raw_page, base_url=None):
     return link_arr
 
 
-def runner(query, limit=1000, recursion=1):
+def runner(query: str,
+           limit: int = typer.Option(1000, '-l', help="maximum count of links to display"),
+           recursion: int = typer.Option(1, '-r', help="level of recursion")):
+
     max_result = limit
-    linksfromgoogle = google_search(query=query)
-    linkslib = []
-    newlinkslib = linksfromgoogle
-    input_iter = recursion
-    iter = 0
-    while iter < input_iter:
-        linkslib += newlinkslib
-        tmp = []
-        for url in newlinkslib:
-            newlinks = links_from_url(url)
-            if newlinks is not None:
-                tmp += newlinks
-            if len(linkslib) + len(tmp) >= max_result:
-                break
-        newlinkslib = tmp
-        iter += 1
-    else:
-        linkslib += newlinkslib
+    with typer.progressbar(length=max_result, label="Parsing") as progress:
+        linksfromgoogle = google_search(query=query)
+        linkslib = []
+        newlinkslib = linksfromgoogle
+        input_iter = recursion
+        iter = 0
+        progress.update(len(newlinkslib))
+        while iter < input_iter:
+            linkslib += newlinkslib
+            tmp = []
+            for url in newlinkslib:
+                newlinks = links_from_url(url)
+                if newlinks is not None:
+                    tmp += newlinks
+                    progress.update(len(newlinks))
+                if len(linkslib) + len(tmp) >= max_result:
+                    break
+            newlinkslib = tmp
+            iter += 1
+        else:
+            linkslib += newlinkslib
     pprint.pprint(linkslib[:max_result])
+    typer.secho(f"Printed {len(linkslib[:max_result])} URL's", fg=typer.colors.BRIGHT_GREEN)
 
-
-def createParser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('query', nargs='?', default='Что такое Backend')
-
-    parser.add_argument('-l', '--limit', default=1000)
-
-    parser.add_argument('-r', '--recursion', default=1)
-
-    return parser
 
 if __name__ == '__main__':
-    parser = createParser()
-    namespace = parser.parse_args(sys.argv[1:])
-    runner(namespace.query, recursion=int(namespace.recursion), limit=int(namespace.limit))
+    typer.run(runner)
