@@ -56,7 +56,8 @@ def get_urls_from_url(url):
 
 def runner(query: str = typer.Argument(None, help="Your query"),
            max_count: int = typer.Option(1000, '--limit', '-l',
-                                         help="maximum count of output_links to "
+                                         help="maximum count of output_links "
+                                              "to "
                                               "display"),
            recursion: int = typer.Option(1, '--recursion', '-r',
                                          help="level of recursion")):
